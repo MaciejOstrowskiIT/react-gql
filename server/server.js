@@ -1,8 +1,15 @@
 const express = require("express");
 const { ApolloServer, gql } = require("apollo-server");
-const { ApolloServerPluginDrainHttpServer } = require("apollo-server-core");
+require("dotenv").config();
+// import "dotenv/config";
+const db = require("./db");
+const models = require("./models");
 
 const port = process.env.PORT || 4000;
+// const DB_HOST = process.env.DB_HOST;
+
+const DB_HOST =
+  "mongodb+srv://mern:mongodb@cytrynowysorbet.udove.mongodb.net/?retryWrites=true&w=majority";
 
 const typeDefs = gql`
   type Query {
@@ -14,6 +21,8 @@ const typeDefs = gql`
     id: ID!
     content: String!
     author: String!
+    createdAt: String
+    updatedAt: String
   }
   type Mutation {
     newNote(content: String!): Note!
@@ -23,20 +32,19 @@ const typeDefs = gql`
 const resolvers = {
   Query: {
     hello: () => "Hello, world!123",
-    notes: () => notes,
-    note: (args) => {
-      return notes.find((note) => note.id === args.id);
+    notes: async () => {
+      return await models.Note.find();
+    },
+    note: async (parent, args) => {
+      return await models.Note.findById(args.id);
     },
   },
   Mutation: {
-    newNote: (args) => {
-      let noteValue = {
-        id: String(notes.length + 1),
+    newNote: async (parent, args) => {
+      return await models.Note.create({
         content: args.content,
-        author: "Luege",
-      };
-      notes.push(noteValue);
-      return noteValue;
+        author: "XYZ",
+      });
     },
   },
 };
@@ -46,6 +54,8 @@ let notes = [
   { id: "2", content: "note 2", author: "Mike" },
   { id: "3", content: "note 3", author: "Elvis" },
 ];
+
+db.connect(DB_HOST);
 
 const server = new ApolloServer({
   typeDefs,
