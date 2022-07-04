@@ -1,6 +1,7 @@
 const { gql } = require("apollo-server-express");
 
 module.exports = gql`
+  scalar DateTime
   type Query {
     hello: String
     notes: [Note!]!
@@ -10,8 +11,8 @@ module.exports = gql`
     id: ID!
     content: String!
     author: String!
-    createdAt: String
-    updatedAt: String
+    createdAt: DateTime!
+    updatedAt: DateTime!
   }
   type Mutation {
     newNote(content: String!): Note!
