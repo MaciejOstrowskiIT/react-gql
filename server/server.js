@@ -13,19 +13,34 @@ const port = process.env.PORT || 4000;
 const DB_HOST =
   "mongodb+srv://mern:mongodb@cytrynowysorbet.udove.mongodb.net/?retryWrites=true&w=majority";
 
-let notes = [
-  { id: "1", content: "note 1", author: "Ver" },
-  { id: "2", content: "note 2", author: "Mike" },
-  { id: "3", content: "note 3", author: "Elvis" },
-];
+const JWT_SECRET = "Password";
+
+const jwt = require("jsonwebtoken");
+
+const getUser = (token) => {
+  if (token) {
+    try {
+      return jwt.verify(token, process.env.JWT_SECRET);
+    } catch (err) {
+      throw new Error("Wrong session");
+    }
+  }
+};
 
 db.connect(DB_HOST);
 
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  context: () => {
-    return { models };
+  context: ({ req }) => {
+    const token = req.headers.authorization;
+    const user = getUser(token);
+    if (user) {
+      console.log(user);
+      return { models, user };
+    } else {
+      throw new Error("Header does not contain Authorization token");
+    }
   },
   csrfPrevention: true,
   cache: "bounded",
