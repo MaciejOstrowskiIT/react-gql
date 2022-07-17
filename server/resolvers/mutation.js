@@ -18,7 +18,15 @@ module.exports = {
       author: mongoose.Types.ObjectId(user.id),
     });
   },
-  deleteNote: async (parent, { id }, { models }) => {
+  deleteNote: async (parent, { id }, { models, user }) => {
+    if (!user) {
+      throw new AuthenticationError("Sing in to remove note");
+    }
+
+    const note = await models.Note.findById(id);
+    if (note && String(note.author) !== user.id) {
+      throw new ForbiddenError("You don't have rights to remove note");
+    }
     try {
       await models.Note.findOneAndRemove({ _id: id });
       return true;
@@ -26,7 +34,15 @@ module.exports = {
       return false;
     }
   },
-  updateNote: async (parent, { content, id }, { models }) => {
+  updateNote: async (parent, { content, id }, { models, user }) => {
+    if (!user) {
+      throw new AuthenticationError("Sing in to update note");
+    }
+
+    const note = await models.Note.findById(id);
+    if (note && String(note.author) !== user.id) {
+      throw new ForbiddenError("You don't have rights to update note");
+    }
     return await models.Note.findOneAndUpdate(
       { _id: id },
       { $set: { content } },
