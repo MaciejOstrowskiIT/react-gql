@@ -6,6 +6,7 @@ const {
   AuthenticationError,
   ForbiddenError,
 } = require("apollo-server-express");
+const { user } = require("./query");
 require("dotenv").config();
 
 module.exports = {
@@ -77,5 +78,32 @@ module.exports = {
       throw new AuthenticationError("Auth error /p");
     }
     return jwt.sign({ id: user._id }, process.env.JWT_SECRET);
+  },
+  toggleFavorite: async (parent, { id }, { models, user }) => {
+    if (!user) {
+      throw new AuthenticationError("Auth error /u");
+    }
+
+    let noteCheck = await mongoose.models.Note.findById(id);
+    const hasUser = noteCheck.favoritedBy.indexOf(user.id);
+    if (hasUser >= 0) {
+      return await mongoose.models.Note.findByIdAndUpdate(id, {
+        $pull: {
+          favoritedBy: mongoose.Types.ObjectId(user.id),
+        },
+        $inc: { favoriteCount: -1 },
+      });
+    } else {
+      return await mongoose.models.Note.findByIdAndUpdate(
+        id,
+        {
+          $push: {
+            favoritedBy: mongoose.Types.ObjectId(user.id),
+          },
+          $inc: { favoriteCount: 1 },
+        },
+        { new: true }
+      );
+    }
   },
 };
