@@ -18,7 +18,7 @@ const noteSchema = new mongoose.Schema(
     favoritedBy: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
+        ref: `User`,
       },
     ],
   },
